@@ -33,11 +33,14 @@ fn main() {
      let mut tray = TrayItem::new("Susuwatari", icon).unwrap();
 
     tray.add_label("Susuwatari").unwrap();
+    
+    tray.inner_mut().add_separator().unwrap();
 
     let (tx, rx) = mpsc::sync_channel::<Message>(2);
     
     let itema_tx = tx.clone();
     tray.add_menu_item("", move || {
+    //let item_a = tray.inner_mut().add_menu_item_with_id("", move || {
         itema_tx.send(Message::ItemA).unwrap();
     })
     .unwrap();
@@ -65,6 +68,8 @@ fn main() {
         iteme_tx.send(Message::ItemE).unwrap();
     })
     .unwrap();
+ 
+    tray.inner_mut().add_separator().unwrap();
  
     let quit_tx = tx.clone();
     tray.add_menu_item("Quit", move || {
