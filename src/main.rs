@@ -1,6 +1,7 @@
 use {
     std::io::Cursor,
     std::sync::mpsc,
+    std::time::Duration,
     tray_item::TrayItem,
     tray_item::IconSource,
     arboard::Clipboard
@@ -31,6 +32,7 @@ fn main() {
     tray.add_label("Susuwatari").unwrap();
 
     let (tx, rx) = mpsc::sync_channel::<Message>(2);
+    
     let itema_tx = tx.clone();
     tray.add_menu_item("", move || {
         itema_tx.send(Message::ItemA).unwrap();
@@ -66,30 +68,39 @@ fn main() {
         quit_tx.send(Message::Quit).unwrap();
     })
     .unwrap();
+	
+    let mut last_item = String::new();
+    let timeout_duration = Duration::from_millis(100); // Adjust the timeout duration as needed
 
-    loop {
-        match rx.recv() {
-            Ok(Message::Quit) => {
-                println!("Quit");
-                break
-            },
-            Ok(Message::ItemA) =>{
-                println!("ItemA !");
-            },
-            Ok(Message::ItemB) =>{
-                println!("ItemB !");
-            },
-            Ok(Message::ItemC) =>{
-                println!("ItemC !");
-            },
-            Ok(Message::ItemD) =>{
-                println!("ItemD !");
-            },
-            Ok(Message::ItemE) =>{
-                println!("ItemE !");
-            },
-            _ => {}
-        }
+    loop {	
+	    let mut clipboard = Clipboard::new().unwrap();
+	    
+		if last_item != clipboard.get_text().unwrap() {
+			println!("Clipboard text was: {}", clipboard.get_text().unwrap());
+			last_item = clipboard.get_text().unwrap();
+		}
+		
+        match rx.recv_timeout(timeout_duration) {
+			Ok(Message::Quit) => {
+				println!("Quit");
+				break;
+			},
+			Ok(Message::ItemA) => {
+				println!("ItemA !");
+			},
+			Ok(Message::ItemB) => {
+				println!("ItemB !");
+			},
+			Ok(Message::ItemC) => {
+				println!("ItemC !");
+			},
+			Ok(Message::ItemD) => {
+				println!("ItemD !");
+			},
+			Ok(Message::ItemE) => {
+				println!("ItemE !");
+			},
+			Err(_) => {}
+		}
     }
-
 }
