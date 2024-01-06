@@ -1,8 +1,19 @@
 use {
     std::io::Cursor,
+    std::sync::mpsc,
     tray_item::TrayItem,
-    tray_item::IconSource
+    tray_item::IconSource,
+    arboard::Clipboard
 };
+
+enum Message {
+    Quit,
+    ItemE,
+    ItemD,
+    ItemC,
+    ItemB,
+    ItemA
+}
 
 fn main() {
     gtk::init().unwrap();
@@ -17,15 +28,68 @@ fn main() {
     
      let mut tray = TrayItem::new("Susuwatari", icon).unwrap();
 
-    tray.add_label("Tray Label").unwrap();
+    tray.add_label("Susuwatari").unwrap();
 
-    tray.add_menu_item("Hello", || {
-        println!("Hello!");
-    }).unwrap();
+    let (tx, rx) = mpsc::sync_channel::<Message>(2);
+    let itema_tx = tx.clone();
+    tray.add_menu_item("", move || {
+        itema_tx.send(Message::ItemA).unwrap();
+    })
+    .unwrap();
+	
+	let itemb_tx = tx.clone();
+    tray.add_menu_item("", move || {
+        itemb_tx.send(Message::ItemB).unwrap();
+    })
+    .unwrap();
 
-    tray.add_menu_item("Quit", || {
-        gtk::main_quit();
-    }).unwrap();
+	let itemc_tx = tx.clone();
+    tray.add_menu_item("", move || {
+        itemc_tx.send(Message::ItemC).unwrap();
+    })
+    .unwrap();
+    
+	let itemd_tx = tx.clone();
+    tray.add_menu_item("", move || {
+        itemd_tx.send(Message::ItemD).unwrap();
+    })
+    .unwrap();
+    
+	let iteme_tx = tx.clone();
+    tray.add_menu_item("", move || {
+        iteme_tx.send(Message::ItemE).unwrap();
+    })
+    .unwrap();
+ 
+    let quit_tx = tx.clone();
+    tray.add_menu_item("Quit", move || {
+        quit_tx.send(Message::Quit).unwrap();
+    })
+    .unwrap();
 
-    gtk::main();
+    loop {
+        match rx.recv() {
+            Ok(Message::Quit) => {
+                println!("Quit");
+                break
+            },
+            Ok(Message::ItemA) =>{
+                println!("ItemA !");
+            },
+            Ok(Message::ItemB) =>{
+                println!("ItemB !");
+            },
+            Ok(Message::ItemC) =>{
+                println!("ItemC !");
+            },
+            Ok(Message::ItemD) =>{
+                println!("ItemD !");
+            },
+            Ok(Message::ItemE) =>{
+                println!("ItemE !");
+            },
+            _ => {}
+        }
+    }
+
 }
