@@ -16,8 +16,11 @@ enum Message {
     ItemA
 }
 
+const TIMEOUT_DURATION_MS: u64 = 100;
+const IMAGE_SIZE: i32 = 32;
+
 fn main() {
-    gtk::init().unwrap();
+    gtk::init().expect("Failed to initialize GTK");
 
     let cursor = Cursor::new(include_bytes!("../resources/icon.png"));
     let decoder = png::Decoder::new(cursor);
@@ -25,7 +28,7 @@ fn main() {
     let mut buf = vec![0;info.buffer_size()];
     reader.next_frame(&mut buf).unwrap();
 
-    let icon = IconSource::Data{data: buf, height: 32, width: 32};
+    let icon = IconSource::Data{data: buf, height: IMAGE_SIZE, width: IMAGE_SIZE};
     
      let mut tray = TrayItem::new("Susuwatari", icon).unwrap();
 
@@ -70,14 +73,14 @@ fn main() {
     .unwrap();
 	
     let mut last_item = String::new();
-    let timeout_duration = Duration::from_millis(100); // Adjust the timeout duration as needed
+    let timeout_duration = Duration::from_millis(TIMEOUT_DURATION_MS); // Adjust the timeout duration as needed
 
     loop {	
-	    let mut clipboard = Clipboard::new().unwrap();
+	    let mut clipboard = Clipboard::new().expect("Failed to initialize clipboard");
 	    
 		if last_item != clipboard.get_text().unwrap() {
-			println!("Clipboard text was: {}", clipboard.get_text().unwrap());
 			last_item = clipboard.get_text().unwrap();
+			println!("Clipboard text was: {}", last_item);
 		}
 		
         match rx.recv_timeout(timeout_duration) {
