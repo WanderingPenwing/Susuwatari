@@ -7,6 +7,7 @@ use {
     arboard::Clipboard
 };
 
+
 #[derive(Clone)]
 enum Message {
     Quit,
@@ -17,7 +18,8 @@ enum Message {
     ItemA
 }
 
-fn create_tray(_tx: mpsc::SyncSender<Message>, _menu_labels: [&str; 5]) -> TrayItem {
+
+fn create_tray(_message_sender: mpsc::SyncSender<Message>, _menu_labels: Vec<String>) -> TrayItem {
 	
     let cursor = Cursor::new(include_bytes!("../resources/icon.png"));
     let decoder = png::Decoder::new(cursor);
@@ -37,56 +39,69 @@ fn create_tray(_tx: mpsc::SyncSender<Message>, _menu_labels: [&str; 5]) -> TrayI
 
     tray.inner_mut().add_separator().unwrap();
 
-    let menu_items = vec![
-        (_menu_labels[0], Message::ItemA),
-        (_menu_labels[1], Message::ItemB),
-        (_menu_labels[2], Message::ItemC),
-        (_menu_labels[3], Message::ItemD),
-        (_menu_labels[4], Message::ItemE),
-    ];
+    let menu_items = _menu_labels.iter().cloned().zip(vec![
+        Message::ItemA,
+        Message::ItemB,
+        Message::ItemC,
+        Message::ItemD,
+        Message::ItemE,
+    ]).collect::<Vec<_>>();
 
     for (label, message) in menu_items {
-        let tx_clone = _tx.clone();
-        tray.add_menu_item(label, move || {
-            tx_clone.send(message.clone()).unwrap();
+        let message_sender_clone = _message_sender.clone();
+        tray.add_menu_item(&label, move || {
+            message_sender_clone.send(message.clone()).unwrap();
         }).unwrap();
     }
 
     tray.inner_mut().add_separator().unwrap();
 
-    let quit_tx = _tx.clone();
+    let quit_message_sender = _message_sender.clone();
     tray.add_menu_item("Quit", move || {
-        quit_tx.send(Message::Quit).unwrap();
+        quit_message_sender.send(Message::Quit).unwrap();
     }).unwrap();
 
     tray
 }
 
+
+fn shift_fifo(string_to_add: &str, vector: &mut Vec<String>) {
+    for i in (1..vector.len()).rev() {
+        std::mem::swap(&mut vector[i], &mut vector[i - 1]);
+    }
+    vector[0] = string_to_add.to_string();
+}
+
+
 const TIMEOUT_DURATION_MS: u64 = 100;
 const IMAGE_SIZE: i32 = 32;
+
 
 fn main() {
     gtk::init().expect("Failed to initialize GTK");
     
-    let (tx, rx) = mpsc::sync_channel::<Message>(2);
+    let (message_sender, message_receiver) = mpsc::sync_channel::<Message>(2);
     
-    let menu_labels: [&str; 5] = ["", "", "", "", ""];
+    let mut menu_labels: Vec<String> = vec!["".to_string(); 5];
 
-    create_tray(tx.clone(), menu_labels);
+    create_tray(message_sender.clone(), menu_labels.clone());
 	
     let mut last_item = String::new();
     let timeout_duration = Duration::from_millis(TIMEOUT_DURATION_MS);
+    
+    let mut clipboard = Clipboard::new().expect("Failed to initialize clipboard");
 
     loop {	
-	    let mut clipboard = Clipboard::new().expect("Failed to initialize clipboard");
 	    
-		if last_item != clipboard.get_text().unwrap() {
+		if last_item != clipboard.get_text().expect("Failed to get clipboard") {
 			last_item = clipboard.get_text().unwrap();
-			println!("Clipboard text was: {}", last_item);
-			
+			if !menu_labels.contains(&last_item) {
+				shift_fifo(&last_item, &mut menu_labels);
+				println!("{:?}", menu_labels);
+			}
 		}
 		
-        match rx.recv_timeout(timeout_duration) {
+        match message_receiver.recv_timeout(timeout_duration) {
 			Ok(Message::Quit) => {
 				println!("Quit");
 				break;
