@@ -2,7 +2,7 @@ use ksni::{self, Icon};
 use arboard::Clipboard;
 use std::io::Cursor;
 
-const BUFFER_LENGTH: usize = 5;
+const BUFFER_LENGTH: usize = 10;
 const LINE_LENGTH: usize = 30;
 const ICON_WIDTH: i32 = 32;
 const ICON_HEIGHT: i32 = 32;
@@ -16,7 +16,7 @@ struct MyTray {
 
 impl ksni::Tray for MyTray {
     fn icon_pixmap(&self) -> Vec<Icon> {
-        let cursor_icon = Cursor::new(include_bytes!("../resources/icon.png"));
+        let cursor_icon = Cursor::new(include_bytes!("/etc/susuwatari/icon.png"));
         let decoder_icon = png::Decoder::new(cursor_icon);
         let (info_icon, mut reader_icon) = decoder_icon.read_info().expect("Failed reading icon data");
         let mut buf_icon = vec![0; info_icon.buffer_size()];
