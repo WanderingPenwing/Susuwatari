@@ -7,4 +7,5 @@ edition = "2021"
 
 [dependencies]
 ksni = "0.2.1"
+png = "0.16"
 arboard = "3.3.0"

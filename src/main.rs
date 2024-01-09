@@ -1,16 +1,32 @@
 use ksni;
+use ksni::Icon;
 use arboard::Clipboard;
+use std::io::Cursor;
+
 
 #[derive(Debug)]
 struct MyTray {
     items : Vec<String>,
 }
 
+
 const BUFFER_LENGTH : usize = 5;
 
+
 impl ksni::Tray for MyTray {
-    fn icon_name(&self) -> String {
-        "help-about".into()
+    fn icon_pixmap(&self) -> Vec<Icon> {
+        let cursor_icon = Cursor::new(include_bytes!("../resources/icon.png"));
+		let decoder_icon = png::Decoder::new(cursor_icon);
+		let (info_icon, mut reader_icon) = decoder_icon.read_info().unwrap();
+		let mut buf_icon = vec![0;info_icon.buffer_size()];
+		reader_icon.next_frame(&mut buf_icon).unwrap();
+		
+		let icon = Icon {
+                width: 32,
+                height: 32,
+                data: buf_icon,
+            };
+        vec![icon]
     }
     fn title(&self) -> String {
         { "MyTray" }.into()
@@ -79,12 +95,6 @@ fn main() {
     let handle = service.handle();
     service.spawn();
 
-    //std::thread::sleep(std::time::Duration::from_secs(5));
-    
-    // We can modify the tray
-    handle.update(|tray: &mut MyTray| {
-        tray.items[0] = "kenobi".to_string();
-    });
     // Run forever
     loop {
         //std::thread::park();
