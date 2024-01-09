@@ -45,7 +45,7 @@ impl ksni::Tray for MyTray {
                 let item_clone = item.clone();
                 StandardItem {
                     label: format_title(&item_clone),
-                    activate: Box::new(move |_| println!("{}", &item_clone)),
+                    activate: Box::new(move |_| set_clipboard_text(&item_clone)),
                     //activate: Box::new(move |_| println!("{}", &item_clone)),
                     ..Default::default()
                 }
@@ -105,12 +105,13 @@ fn main() {
 
     // Run forever
     loop {
-        //std::thread::park();
         if let Ok(clipboard_text) = clipboard.get_text() {
             if last_item != clipboard_text {
                 last_item = clipboard_text;
                 handle.update(|tray: &mut MyTray| {
-                    tray.items = shift_fifo(&last_item, &tray.items);
+					//if !(array.iter().any(|e| input.contains(&last_item))) {
+					tray.items = shift_fifo(&last_item, &tray.items);
+					//}
                 });
             }
         }
@@ -118,7 +119,7 @@ fn main() {
 }
 
 
-//~ fn set_text( txt : &str) {
-	//~ let _clipboard = Clipboard::new().expect("Failed to initialize clipboard");
-	//~ _clipboard.set_text(txt).unwrap();
-//~ }
+fn set_clipboard_text( txt : &str) {
+	let mut _clipboard = Clipboard::new().expect("Failed to initialize clipboard");
+	_clipboard.set_text(txt).unwrap();
+}
