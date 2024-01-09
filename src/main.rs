@@ -1,4 +1,5 @@
 use ksni;
+use arboard::Clipboard;
 
 #[derive(Debug)]
 struct MyTray {
@@ -14,7 +15,6 @@ impl ksni::Tray for MyTray {
     fn title(&self) -> String {
         { "MyTray" }.into()
     }
-    // NOTE: On some system trays, `id` is a required property to avoid unexpected behaviors
     fn id(&self) -> String {
         env!("CARGO_PKG_NAME").into()
     }
@@ -56,20 +56,45 @@ impl ksni::Tray for MyTray {
     }
 }
 
+
+fn shift_fifo(string_to_add: &str, vector: &Vec<String>) -> Vec<String> {
+	let mut new_vect = vector.clone();
+    let len = vector.len();
+    for i in (1..len).rev() {
+        new_vect[i] = new_vect[i - 1].clone();
+    }
+    new_vect[0] = string_to_add.to_string(); 
+    
+    new_vect
+}
+
+
 fn main() {
+	let mut clipboard = Clipboard::new().expect("Failed to initialize clipboard");
+	let mut last_item = String::new();
+	
     let service = ksni::TrayService::new(MyTray {
         items: vec!["".to_string(); BUFFER_LENGTH],
     });
     let handle = service.handle();
     service.spawn();
 
-    std::thread::sleep(std::time::Duration::from_secs(5));
+    //std::thread::sleep(std::time::Duration::from_secs(5));
+    
     // We can modify the tray
     handle.update(|tray: &mut MyTray| {
         tray.items[0] = "kenobi".to_string();
     });
     // Run forever
     loop {
-        std::thread::park();
+        //std::thread::park();
+        if let Ok(clipboard_text) = clipboard.get_text() {
+            if last_item != clipboard_text {
+                last_item = clipboard_text;
+                handle.update(|tray: &mut MyTray| {
+                    tray.items = shift_fifo(&last_item, &tray.items);
+                });
+            }
+        }
     }
 }
