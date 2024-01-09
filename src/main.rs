@@ -11,6 +11,7 @@ struct MyTray {
 
 
 const BUFFER_LENGTH : usize = 5;
+const LINE_LENGTH : usize = 30;
 
 
 impl ksni::Tray for MyTray {
@@ -43,8 +44,9 @@ impl ksni::Tray for MyTray {
             .map(|item| {
                 let item_clone = item.clone();
                 StandardItem {
-                    label: item_clone.clone(),
-                    activate: Box::new(move |_| println!("{}", item_clone)),
+                    label: format_title(&item_clone),
+                    activate: Box::new(move |_| println!("{}", &item_clone)),
+                    //activate: Box::new(move |_| println!("{}", &item_clone)),
                     ..Default::default()
                 }
                 .into()
@@ -70,6 +72,12 @@ impl ksni::Tray for MyTray {
 		
 		menu
     }
+}
+
+fn format_title( text : &str) -> String {
+	let line = str::replace(text, "\n", "");
+    let end = line.chars().map(|c| c.len_utf8()).take(LINE_LENGTH).sum();
+    line[..end].to_string()
 }
 
 
@@ -108,3 +116,9 @@ fn main() {
         }
     }
 }
+
+
+//~ fn set_text( txt : &str) {
+	//~ let _clipboard = Clipboard::new().expect("Failed to initialize clipboard");
+	//~ _clipboard.set_text(txt).unwrap();
+//~ }
