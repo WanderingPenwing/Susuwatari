@@ -1,7 +1,11 @@
-use ksni;
-use ksni::Icon;
+use ksni::{self, Icon};
 use arboard::Clipboard;
 use std::io::Cursor;
+
+const BUFFER_LENGTH: usize = 5;
+const LINE_LENGTH: usize = 30;
+const ICON_WIDTH: i32 = 32;
+const ICON_HEIGHT: i32 = 32;
 
 
 #[derive(Debug)]
@@ -10,24 +14,19 @@ struct MyTray {
 }
 
 
-const BUFFER_LENGTH : usize = 5;
-const LINE_LENGTH : usize = 30;
-
-
 impl ksni::Tray for MyTray {
     fn icon_pixmap(&self) -> Vec<Icon> {
         let cursor_icon = Cursor::new(include_bytes!("../resources/icon.png"));
-		let decoder_icon = png::Decoder::new(cursor_icon);
-		let (info_icon, mut reader_icon) = decoder_icon.read_info().unwrap();
-		let mut buf_icon = vec![0;info_icon.buffer_size()];
-		reader_icon.next_frame(&mut buf_icon).unwrap();
-		
-		let icon = Icon {
-                width: 32,
-                height: 32,
-                data: buf_icon,
-            };
-        vec![icon]
+        let decoder_icon = png::Decoder::new(cursor_icon);
+        let (info_icon, mut reader_icon) = decoder_icon.read_info().expect("Failed reading icon data");
+        let mut buf_icon = vec![0; info_icon.buffer_size()];
+        reader_icon.next_frame(&mut buf_icon).expect("Failed getting icon frame data");
+
+        vec![Icon {
+            width: ICON_WIDTH,
+            height: ICON_HEIGHT,
+            data: buf_icon,
+        }]
     }
     fn title(&self) -> String {
         { "MyTray" }.into()
@@ -46,7 +45,6 @@ impl ksni::Tray for MyTray {
                 StandardItem {
                     label: format_title(&item_clone),
                     activate: Box::new(move |_| set_clipboard_text(&item_clone)),
-                    //activate: Box::new(move |_| println!("{}", &item_clone)),
                     ..Default::default()
                 }
                 .into()
@@ -109,12 +107,14 @@ fn main() {
             if last_item != clipboard_text {
                 last_item = clipboard_text;
                 handle.update(|tray: &mut MyTray| {
-					//if !(array.iter().any(|e| input.contains(&last_item))) {
-					tray.items = shift_fifo(&last_item, &tray.items);
-					//}
+					if !tray.items.contains(&last_item,) {
+						tray.items = shift_fifo(&last_item, &tray.items);
+					}
                 });
             }
         }
+        
+        std::thread::sleep(std::time::Duration::from_millis(100));
     }
 }
 
