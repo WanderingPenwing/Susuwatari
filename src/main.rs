@@ -1,6 +1,7 @@
 use ksni::{self, Icon};
 use arboard::Clipboard;
 use std::io::Cursor;
+use current_platform::{COMPILED_ON, CURRENT_PLATFORM};
 
 const BUFFER_LENGTH: usize = 10;
 const LINE_LENGTH: usize = 30;
@@ -92,6 +93,8 @@ fn shift_fifo(string_to_add: &str, vector: &Vec<String>) -> Vec<String> {
 
 
 fn main() {
+	println!("Hello, world from {}! I was compiled on {}.", CURRENT_PLATFORM, COMPILED_ON);
+	
 	let mut clipboard = Clipboard::new().expect("Failed to initialize clipboard");
 	let mut last_item = String::new();
 	

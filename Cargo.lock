@@ -171,6 +171,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "current_platform"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a74858bcfe44b22016cb49337d7b6f04618c58e5dbfdef61b06b8c434324a0bc"
+
+[[package]]
 name = "dbus"
 version = "0.9.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -562,6 +568,7 @@ name = "susuwatari"
 version = "0.1.0"
 dependencies = [
  "arboard",
+ "current_platform",
  "ksni",
  "png 0.16.8",
 ]
