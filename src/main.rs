@@ -83,10 +83,19 @@ fn format_title( text : &str) -> String {
 fn shift_fifo(string_to_add: &str, vector: &Vec<String>) -> Vec<String> {
 	let mut new_vect = vector.clone();
     let len = vector.len();
-    for i in (1..len).rev() {
-        new_vect[i] = new_vect[i - 1].clone();
-    }
+    
+    let mut last_item = new_vect[0].clone();
     new_vect[0] = string_to_add.to_string(); 
+    
+    for i in 1..len {
+		if new_vect[i] == string_to_add {
+			new_vect[i] = last_item.clone();
+			break;
+		}
+		let temp = new_vect[i].clone();
+        new_vect[i] = last_item.clone();
+        last_item = temp.clone();
+    }
     
     new_vect
 }
@@ -110,9 +119,7 @@ fn main() {
             if last_item != clipboard_text {
                 last_item = clipboard_text;
                 handle.update(|tray: &mut MyTray| {
-					if !tray.items.contains(&last_item,) {
-						tray.items = shift_fifo(&last_item, &tray.items);
-					}
+					tray.items = shift_fifo(&last_item, &tray.items);
                 });
             }
         }
