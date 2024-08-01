@@ -54,8 +54,14 @@ impl History {
 	}
 	
 	async fn select_entry(&self) -> Result<String, Box<dyn std::error::Error>> {
-		let input_data = self.entries.join("\n");
+		
+		
+		let mut formated_data : Vec<String> = vec![];
+		for (index, entry) in self.entries.iter().enumerate() {
+			formated_data.push(format!("{}- {}",index, entry.split('\n').next().unwrap_or("err")));
+		}
 
+		let input_data = formated_data.join("\n");
 		// Prepare the command
 		let mut cmd = Command::new("sh")
 			.arg("-c")
@@ -66,13 +72,17 @@ impl History {
 		
 		let stdin = cmd.stdin.as_mut().ok_or("Failed to open stdin")?;
 		stdin.write_all(input_data.as_bytes()).await?;
-	
-		println!("awaiting");
 		
 		// Await the command to complete
 		let output = cmd.wait_with_output().await?;
 		
-		Ok(String::from_utf8(output.stdout)?)
+		let result = String::from_utf8(output.stdout)?;
+		
+		let index_str = result.split('-').next().unwrap_or("0");
+		
+		let index = index_str.parse::<usize>().unwrap_or(0);
+		
+		Ok(self.entries[index].clone())
 	}
 }
 

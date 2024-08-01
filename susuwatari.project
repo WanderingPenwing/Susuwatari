@@ -1,0 +1,1 @@
+{"categories":[{"name":"todo","content":[{"name":"handle multiline input","description":"instead of showing every line in dmenu\nshow the first line with a number\n\nfetch the number from the output \nuse the number to get the entry and put it in the clipboard","id":1}]},{"name":"+","content":[]}]}
