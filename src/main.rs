@@ -28,7 +28,15 @@ impl History {
 	}
 	
 	fn update(&mut self) {
-		//clipboard.get_text().unwrap()
+		let clip = self.clipboard.get_text().unwrap();
+		
+		for entry in &self.entries {
+			if &clip == entry {
+				return
+			}
+		}
+		
+		self.entries.insert(0, clip);
 	}
 	
 	async fn paste(&self) {
