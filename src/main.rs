@@ -119,6 +119,7 @@ async fn main() {
 		loop {
 			if let Err(error) = grab(callback.clone()) {
 				println!("Error: {:?}", error);
+				return
 			}
 		}
 	});
