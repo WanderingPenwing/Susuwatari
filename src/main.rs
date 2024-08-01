@@ -1,4 +1,4 @@
-use rdev::{grab, Event, EventType, Key};
+use rdev::{grab, Event, EventType, Key, simulate};
 use tokio::sync::mpsc;
 use tokio::task;
 use tokio::process::Command;
@@ -22,7 +22,7 @@ struct History {
 impl History {
 	fn new() -> Self {
 		Self {
-			entries: vec!["1".into(), "2".into(), "3".into()],
+			entries: vec![],
 			clipboard: Clipboard::new().unwrap(),
 		}
 	}
@@ -39,13 +39,13 @@ impl History {
 		self.entries.insert(0, clip);
 	}
 	
-	async fn paste(&self) {
+	async fn paste(&mut self) {
 		if self.entries.len() == 0 {
 			return
 		}
 		match self.select_entry().await {
 			Ok(entry) => {
-				println!("# {}", entry);
+				let _ = self.clipboard.set_text(entry);
 			}
 			Err(why) => {
 				eprintln!("error pasting clipboard : {}", why);
@@ -111,6 +111,8 @@ async fn main() {
 		});
 		Some(event)
 	};
+	
+	let _ = simulate(&EventType::KeyRelease(Key::Return));
 
 	// Spawn a task to handle the event grabbing
 	tokio::spawn(async move {
@@ -142,13 +144,11 @@ async fn main() {
 			}
 			Hotkey::KeyC => {
 				if ctrl_pressed {
-					println!("copied");
 					history.update();
 				}
 			}
 			Hotkey::KeyV => {
 				if mod_pressed {
-					println!("paste");
 					history.paste().await;
 				}
 			}
