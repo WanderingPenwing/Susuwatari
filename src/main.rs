@@ -22,15 +22,22 @@ impl History {
 	}
 	
 	fn update(&mut self) {
-		let clip = self.clipboard.get_text().unwrap();
-		
-		for entry in &self.entries {
-			if &clip == entry {
-				return
+		let clipboard_result = self.clipboard.get_text();
+
+		match clipboard_result {
+			Ok(clipboard_content) => {
+				for entry in &self.entries {
+					if &clipboard_content == entry {
+						return
+					}
+				}
+				println!("new entry");
+				self.entries.insert(0, clipboard_content);
+			}
+			Err(why) => {
+				eprintln!("could not fetch clipboard : {}", why);
 			}
 		}
-		println!("new entry");
-		self.entries.insert(0, clip);
 	}
 	
 	fn paste(&mut self) {
